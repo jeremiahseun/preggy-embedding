@@ -1,25 +1,29 @@
 import processArticleForEmbedding from "./docs_processing.js";
 import { embedDocuments } from "./embed.js";
-import { getCollection } from "./qdrant.js";
+import { getCollection, searchKnowledgeBase } from "./qdrant.js";
 import { antenatalCareArticle, deliveryArticle, foodsToAvoidArticle, healthyDietArticle, maternityLeaveArticle, postpartumDepressionArticle, prenatalCareArticle, travellingWhilePregnantArticle, twinPregnancyArticle, ultrasoundScansArticle, vegetarianVeganDietArticle, vitaminsSupplementsArticle } from "./utils/articles.js";
 
 
 
 async function main() {
+    await searchKnowledgeBase("Is ultrasound scan painful? I am scared");
+
+}
+
+async function addArticles() {
     // FIRSTLY GET THE COLLECTION
     await getCollection();
     // PROCESS DOCUMENT AND SEND TO EMBED
 
-   for (const article of articles) {
-    console.log("Starting article: ", article.title);
-       const processedArticle = processArticleForEmbedding(article)
+    for (const article of articles) {
+        console.log("Starting article: ", article.title);
+        const processedArticle = processArticleForEmbedding(article)
 
-       if (processedArticle.chunks) {
-           // EMBED DOCUMENT (GEMINI LAYER + QDRANT LAYER)
-           await embedDocuments(processedArticle);
-       }
-   }
-
+        if (processedArticle.chunks) {
+            // EMBED DOCUMENT (GEMINI LAYER + QDRANT LAYER)
+            await embedDocuments(processedArticle);
+        }
+    }
 }
 
 const articles = [

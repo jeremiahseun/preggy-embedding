@@ -115,3 +115,39 @@ export async function embedInBatchesCohere(
     console.log(`Successfully embedded ${allEmbeddings.length} of ${totalChunks} chunks with Cohere.`);
     return allEmbeddings;
 }
+
+
+/**
+ * Embeds a single search query using the Cohere API.
+ * This function is optimized for retrieval tasks.
+ *
+ * @param query The user's search query string.
+ * @returns A promise that resolves to the embedding vector (number[]) or null on failure.
+ */
+export async function embedQueryCohere(query: string): Promise<number[] | null> {
+    console.log(`Embedding user query: "${query}"`);
+    try {
+        const response = await cohere.v2.embed({
+            texts: [query], // The embed API always expects an array, even for a single text
+            model: COHERE_EMBEDDING_MODEL,
+            /**
+             * CRITICAL: Use 'search_query' for user queries.
+             * This creates a vector optimized to find documents that were embedded
+             * using 'search_document'. This asymmetry is key to Cohere's performance.
+             */
+            inputType: "search_query",
+        });
+
+        // Since we sent one text, we get one embedding back.
+        if (response.embeddings && (response.embeddings.float !== undefined && response.embeddings.float.length > 0)) {
+            return response.embeddings.float[0] ?? null;
+        }
+
+        console.error("Cohere API returned no embeddings for the query.");
+        return null;
+
+    } catch (error) {
+        console.error("Error embedding query with Cohere:", error instanceof Error ? error.message : error);
+        return null;
+    }
+}
